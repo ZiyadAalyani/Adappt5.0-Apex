@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/sentinel",
+      "destination": "/sentinel.html"
+    },
+    {
+      "source": "/((?!api|_expo|assets|favicon.ico|sentinel.html|metadata.json).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

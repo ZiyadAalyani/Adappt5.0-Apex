@@ -925,10 +925,14 @@ app.get('/sentinel', (req, res) => {
   res.redirect('/');
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`=======================================================`);
-  console.log(`🛡️  SecureNest Gateway & Sentinel running on port ${PORT}`);
-  console.log(`📡 Background Decoys & Honeypots: ACTIVE`);
-  console.log(`🤖 SecureBot Gemini AI Bridge: ONLINE`);
-  console.log(`=======================================================`);
-});
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`=======================================================`);
+    console.log(`🛡️  SecureNest Gateway & Sentinel running on port ${PORT}`);
+    console.log(`📡 Background Decoys & Honeypots: ACTIVE`);
+    console.log(`🤖 SecureBot Gemini AI Bridge: ONLINE`);
+    console.log(`=======================================================`);
+  });
+}
+
+module.exports = app;
