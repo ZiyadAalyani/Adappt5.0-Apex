@@ -31,13 +31,16 @@ if (fs.existsSync(PUBLIC_DIR)) {
 
 const PORT = process.env.PORT || 3000;
 const NEON_DATABASE_URL = process.env.NEON_DATABASE_URL || '';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AQ.Ab8RN6KMZC5m5GYdQivjILjNpyJkgvKeSjmEW-TAtUd6kxWv9Q';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 // Forensics & Evidence directory
-const EVIDENCE_DIR = path.join(__dirname, 'evidence');
-if (!fs.existsSync(EVIDENCE_DIR)) {
-  fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
-}
+// Vercel's filesystem is read-only except /tmp
+const EVIDENCE_DIR = process.env.VERCEL ? '/tmp/evidence' : path.join(__dirname, 'evidence');
+try {
+  if (!fs.existsSync(EVIDENCE_DIR)) {
+    fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
+  }
+} catch (_) {}
 
 // In-Memory Data Store (Used if Neon DB is connecting or offline)
 let localStore = {
@@ -925,7 +928,8 @@ app.get('/sentinel', (req, res) => {
   res.redirect('/');
 });
 
-if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+// Local / VPS: start a server. On Vercel the app is exported and run as a serverless function.
+if (require.main === module) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
     console.log(`🛡️  SecureNest Gateway & Sentinel running on port ${PORT}`);

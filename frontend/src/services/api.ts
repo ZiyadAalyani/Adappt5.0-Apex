@@ -75,7 +75,13 @@ export function setBackendUrl(url: string) {
 }
 
 export function getBackendUrl(): string {
-  return customBackendUrl || BACKEND_URL;
+  if (customBackendUrl) return customBackendUrl;
+  // Deployed web build (e.g. Vercel): API lives on the same origin
+  if (typeof window !== 'undefined' && window.location && /^https?:$/.test(window.location.protocol)) {
+    const h = window.location.hostname;
+    if (h !== 'localhost' && h !== '127.0.0.1') return window.location.origin;
+  }
+  return BACKEND_URL;
 }
 
 // Internal State Fallback
@@ -546,8 +552,10 @@ export async function sendAegisChat(
   } catch (_) {}
 
   // Direct Gemini 3.5 Flash Lite call fallback if backend is offline
-  const GEMINI_KEY = 'AQ.Ab8RN6KMZC5m5GYdQivjILjNpyJkgvKeSjmEW-TAtUd6kxWv9Q';
+  // Optional direct fallback; set EXPO_PUBLIC_GEMINI_KEY at build time. Left empty by default so no key ships in the bundle.
+  const GEMINI_KEY = process.env.EXPO_PUBLIC_GEMINI_KEY || '';
   try {
+    if (!GEMINI_KEY) throw new Error('no direct key configured');
     const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_KEY}`;
     const userParts: any[] = [{ text: `Smart Home Security Context: Score ${localFallbackState.policy.overall_health_score}/100. Mode: ${localFallbackState.policy.current_privacy_mode}. Devices: Living Room Camera, Front Door Smart Lock, Bedroom Smart Bulb, Rogue ESP32. User language: ${language}. User says: ${message || 'Audit my smart home.'}` }];
     if (attachedImageBase64) {

@@ -1,0 +1,8 @@
+backend/.env
+backend/evidence
+backend/public/_expo
+backend/public/assets
+backend/public/index.html
+*.bat
+*.vbs
+upload_to_github.js

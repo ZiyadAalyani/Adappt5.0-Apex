@@ -1,3 +1,2 @@
-const app = require('../backend/server.js');
-
-module.exports = app;
+// Vercel serverless entry: runs the Express backend (backend/server.js) as a function.
+module.exports = require('../backend/server.js');

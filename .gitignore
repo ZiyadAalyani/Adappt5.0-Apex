@@ -26,3 +26,8 @@ Thumbs.db
 
 # Evidence files from attacks
 backend/evidence/*.json
+
+# Secrets
+.env
+backend/.env
+dist/

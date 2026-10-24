@@ -1,15 +1,16 @@
 {
-  "name": "securenest-web",
+  "name": "securenest-vercel",
   "version": "1.0.0",
-  "description": "SecureNest Smart Home Sentinel & SecureBot AI Guardian",
-  "main": "api/index.js",
+  "private": true,
+  "description": "SecureNest web app (Expo web) + Sentinel API as a Vercel serverless function",
   "scripts": {
-    "start": "node backend/server.js"
+    "build": "cd frontend && npm install --legacy-peer-deps && npx expo export --platform web --output-dir ../dist"
   },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.3",
     "pg": "^8.23.1"
-  }
+  },
+  "engines": { "node": "20.x" }
 }
