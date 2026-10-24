@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartHome Sentinel Enhanced</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --line: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --ok: #22c55e;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+  --accent: #22d3ee;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif;
+  min-height: 100vh;
+}
+main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+header {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+}
+h1 { font-size: 1.8rem; margin: 0; color: var(--accent); }
+.badge {
+  background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid #22c55e;
+  padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+}
+.banner {
+  background: rgba(34,197,94,0.15); border: 1px solid #22c55e;
+  border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; text-align: center;
+}
+.stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.stat {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 16px;
+}
+.stat b { display: block; font-size: 1.8rem; color: var(--accent); }
+.stat span { color: var(--muted); font-size: 0.85rem; }
+.grid {
+  display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; margin-bottom: 16px;
+}
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px;
+}
+.card h2 {
+  margin: 0 0 14px; font-size: 1.1rem; border-bottom: 1px solid var(--line); padding-bottom: 8px;
+}
+.device {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; background: #0f172a; border-radius: 8px;
+  border-left: 4px solid var(--ok); margin-bottom: 8px;
+}
+.device .name { font-weight: 500; }
+.device .status { color: var(--muted); font-size: 0.9rem; }
+.bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+button {
+  font: inherit; padding: 10px 16px; border-radius: 8px; border: none;
+  background: #0891b2; color: white; cursor: pointer; font-weight: 600;
+}
+button.ghost { background: #334155; }
+button:hover { opacity: 0.9; }
+.att {
+  background: #0f172a; border: 1px solid var(--line); border-left: 5px solid var(--muted);
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+}
+.att.blocked { border-left-color: var(--bad); background: rgba(239,68,68,0.08); }
+.att header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.ip { font: 600 1.05rem ui-monospace, Menlo, monospace; }
+.tag {
+  font-size: 0.75rem; padding: 2px 8px; border-radius: 99px;
+  background: #334155;
+}
+.blocked .tag { background: rgba(239,68,68,0.3); color: #fca5a5; }
+dl { display: grid; grid-template-columns: 110px 1fr; gap: 3px 10px; margin: 6px 0 0; font-size: 0.9rem; }
+dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
+.note { color: var(--muted); font-size: 0.85rem; margin-top: 20px; line-height: 1.5; }
+.empty { color: var(--muted); text-align: center; padding: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>🏠 SmartHome Sentinel</h1>
+      <div class="badge" id="status-badge">● MAXIMUM SECURITY ACTIVE</div>
+    </div>
+  </header>
+
+  <div class="banner">
+    🛡️ All devices locked. Unauthorized access is blocked. Attacker IPs are logged with full details.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="bar">
+    <button id="sim">Simulate Hacker Attack</button>
+    <button id="exp" class="ghost">Download Evidence</button>
+    <button id="refresh" class="ghost">Refresh</button>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Connected Devices</h2>
+      <div id="devices"></div>
+    </section>
+
+    <section class="card">
+      <h2>Attackers & Incidents</h2>
+      <div id="list"></div>
+    </section>
+  </div>
+
+  <p class="note">
+    An IP address identifies a network connection, not a person. Attackers often use VPNs or compromised devices.
+    Share saved evidence with your ISP or authorities. Never attempt to hack back.
+    This system blocks inside the application — also add blocked IPs to your router/firewall for network-level protection.
+  </p>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&","<":"<",">":">",'"':""","'":"&#39;"}[c]));
+
+const API_BASE = (window.location.protocol === 'file:' || !window.location.port) ? 'http://localhost:3000' : '';
+async function api(path, opts = {}) {
+  const url = path.startsWith('http') ? path : (API_BASE + path);
+  const r = await fetch(url, {
+    ...opts,
+    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+  });
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    throw new Error(r.status + " " + text);
+  }
+  return r.json();
+}
+
+function renderDevices(devs) {
+  $("#devices").innerHTML = Object.values(devs).map(d => `
+    <div class="device">
+      <span class="name">${esc(d.name)}</span>
+      <span class="status">${esc(d.status)} ${d.secure ? "🔒" : "⚠️"}</span>
+    </div>
+  `).join("");
+}
+
+function card(a) {
+  const kinds = Object.entries(a.kinds || {}).map(([k,v]) => `${k.replace(/_/g," ")} ${v}`).join(", ");
+  return `<article class="att ${a.blocked ? "blocked" : ""}">
+    <header>
+      <span class="ip">${esc(a.ip)}</span>
+      <span class="tag">${a.blocked ? "BLOCKED" : "Watching"}</span>
+    </header>
+    <dl>
+      <dt>Attempts</dt><dd>${a.total} (${esc(kinds)})</dd>
+      <dt>First / Last</dt><dd>${esc(a.first)} → ${esc(a.last)}</dd>
+      <dt>Host</dt><dd>${esc(a.host || "—")}</dd>
+      <dt>Location</dt><dd>${esc(a.geo || "Looking up…")}</dd>
+      <dt>Software</dt><dd>${esc((a.user_agents || []).join("; "))}</dd>
+      <dt>Targeted</dt><dd>${esc((a.paths || []).join(", "))}</dd>
+    </dl>
+    ${a.blocked ? `<button class="ghost" data-ip="${esc(a.ip)}" style="margin-top:8px">Unblock</button>` : ""}
+  </article>`;
+}
+
+async function load() {
+  try {
+    const [status, devices, events] = await Promise.all([
+      api("/api/status"),
+      api("/api/devices"),
+      api("/api/events"),
+    ]);
+    $("#stats").innerHTML = `
+      <div class="stat"><b>${status.attackersSeen}</b><span>Attackers seen</span></div>
+      <div class="stat"><b>${status.blocked}</b><span>Blocked</span></div>
+      <div class="stat"><b>${status.totalAttempts}</b><span>Attempts logged</span></div>
+      <div class="stat"><b>${status.devicesSecure}</b><span>Devices secure</span></div>
+    `;
+    renderDevices(devices);
+    $("#list").innerHTML = events.length
+      ? events.map(card).join("")
+      : '<p class="empty">No attackers yet. Click “Simulate Hacker Attack” to test.</p>';
+  } catch (e) {
+    $("#list").innerHTML = '<p class="empty">Cannot reach hub. Make sure sentinel.py is running.</p>';
+  }
+}
+
+$("#sim").onclick = async () => {
+  $("#sim").textContent = "Simulating…";
+  await api("/api/simulate", { method: "POST" });
+  $("#sim").textContent = "Simulate Hacker Attack";
+  load();
+};
+$("#exp").onclick = async () => {
+  const data = await api("/api/events");
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "sentinel-evidence.json";
+  a.click();
+};
+$("#refresh").onclick = load;
+$("#list").onclick = async e => {
+  const ip = e.target.dataset.ip;
+  if (!ip) return;
+  await api("/api/unblock", { method: "POST", body: JSON.stringify({ ip }) });
+  load();
+};
+
+load();
+setInterval(load, 3000);
+</script>
+</body>
+</html>
